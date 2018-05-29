@@ -1,6 +1,8 @@
 const puppeteer = require("puppeteer");
 const { exec } = require("child_process");
 const fs = require("fs");
+const youtubedl = require("youtube-dl");
+const sanitize = require("sanitize-filename");
 
 // DB
 const low = require("lowdb");
@@ -9,7 +11,8 @@ const adapter = new FileSync("db.json");
 const db = low(adapter);
 db.defaults({ downloaded: [] }).write();
 
-const DL_DIR = "./dl";
+const DL_DIR = "dl";
+let NEW = false;
 
 (async () => {
 
@@ -47,18 +50,23 @@ const DL_DIR = "./dl";
 			return document.querySelector(sel).getAttribute("href").replace(/^/, "https://youtube.com");
 		}, linkSelector)
 
-		// log valid title
-		console.log(title);
-
 		// cancel if previously downloaded
 		if(DBHas(link)){
 			continue;
 		}
 
+		// log valid title
+		console.log(title);
+
 		// download
 		download(link, title);
 
+		// new videos existed
+		NEW = true;
+
 	}
+
+	if(!NEW) console.log("No new videos to download");
 
 	await browser.close();
 
@@ -71,6 +79,30 @@ function DBHas(link){
 }
 
 function download(link, title){
+
+	// check for dir
+	if (!fs.existsSync(DL_DIR)) fs.mkdirSync(DL_DIR);
+
+	// download
+	let dl = youtubedl(link)
+
+	// write stream
+	let filename = sanitize(title) + ".mp4";
+	dl.pipe(fs.createWriteStream(`${DL_DIR}/${filename}`));
+
+	// handle output
+	dl.on("info", (info) => {
+		console.log("Download started: " + filename);
+	})
+
+	dl.on("end", () => {
+		console.log("Download complete: " + filename);
+		addToDB(link, title);
+	});
+
+}
+
+function downloadOG(link, title){
 
 	// check for dir
 	if (!fs.existsSync(DL_DIR)) fs.mkdirSync(DL_DIR);

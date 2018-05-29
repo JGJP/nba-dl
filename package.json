@@ -11,6 +11,8 @@
   "license": "ISC",
   "dependencies": {
     "lowdb": "^1.0.0",
-    "puppeteer": "^1.4.0"
+    "puppeteer": "^1.4.0",
+    "sanitize-filename": "^1.6.1",
+    "youtube-dl": "1.11.1"
   }
 }
