@@ -1,4 +1,8 @@
 const puppeteer = require("puppeteer");
+const { exec } = require("child_process");
+const fs = require('fs');
+
+const DL_DIR = "./dl";
 
 (async () => {
 
@@ -7,32 +11,62 @@ const puppeteer = require("puppeteer");
 	const page = await browser.newPage();
 	await page.goto("https://www.youtube.com/channel/UCdxB6UoY7VggXoaOSvEhSjg/videos", {waitUntil: "networkidle2"});
 
-	// const videos = await page.evaluate(() => { return document.querySelectorAll('h3.ytd-grid-video-renderer')});
-	// const items = await page.$eval('#items.ytd-grid-renderer', el => el.innerHTML);
+	const LINK_SELECTOR = "#items ytd-grid-video-renderer:nth-child(INDEX) h3 a";
+	const LENGTH_SELECTOR = "#items ytd-grid-video-renderer";
 
-	// "#items ytd-grid-video-renderer h3 a"
-	// "#items ytd-grid-video-renderer"
 
-	// const vidsCount = await page.$$eval("#items ytd-grid-video-renderer h3 a", vids => vids.length);
-	// console.log(vidsCount);	
+	let listLength = await page.evaluate((sel) => {
+		return document.querySelectorAll(sel).length;
+	}, LENGTH_SELECTOR);
 
-	// for(var i = 0; i < vidsCount; i++){
-	// 	const item = await page.$eval
-	// }
+	console.log(`videos found: ${listLength}`);
 
-	const items = await page.$$('#items.ytd-grid-renderer h3 a');
+	for(let i = 1; i <= listLength; i++){
 
-	for (const item of items){
-		console.log(item);
-		// await async function(){
-		// 	const title = await page.evaluate(item => item.innerHTML, item);
-		// 	console.log('title:');
-		// 	console.log(title);
-		// }
+		let linkSelector = LINK_SELECTOR.replace("INDEX", i);
+
+		// get title
+		let title = await page.evaluate((sel) => {
+			let el = document.querySelector(sel);
+			return el.innerHTML;
+		}, linkSelector);
+
+		// check title
+		if(!title.match(/Full Game Highlights \| Game 7/))
+			continue;
+
+		// log valid title
+		console.log(title);
+
+		// get link
+		let link = await page.evaluate((sel) => {
+			return document.querySelector(sel).getAttribute("href").replace(/^/, "https://youtube.com");
+		}, linkSelector)
+
+		// download
+		download(link);
+
 	}
-	console.log('done');
-	// const title = await page.evaluate(item => item.querySelectorAll, items);
 
 	await browser.close();
 
 })();
+
+function download(link){
+
+	// check for dir
+	if (!fs.existsSync(DL_DIR)) fs.mkdirSync(DL_DIR);
+
+	// download
+	let child = exec(`youtube-dl "${link}" -f best -o "${DL_DIR}/%(title)s.%(ext)s"`);
+
+	// handle output
+	child.on("error", (code, signal) => {
+		console.log('child process exited with ' + `code ${code} and signal ${signal}`);
+	})
+
+	child.on("exit", (code, signal) => {
+		console.log('download complete');
+	})
+
+}
