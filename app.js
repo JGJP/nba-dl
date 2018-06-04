@@ -88,7 +88,7 @@ function download(link, title){
 
 	// write stream
 	let filename = sanitize(title) + ".mp4";
-	dl.pipe(fs.createWriteStream(`${DL_DIR}/${filename}`));
+	dl.pipe(fs.createWriteStream(`./${DL_DIR}/${filename}`));
 
 	// handle output
 	dl.on("info", (info) => {
