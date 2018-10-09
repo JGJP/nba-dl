@@ -42,8 +42,8 @@ let NEW = false;
 		}, linkSelector);
 
 		// cancel if not a target
-		if(!title.match(/Full Game Highlights/))
-			continue;
+		if(!title.match(/Full Game Highlights/)
+			) continue;
 
 		// get link
 		link = await page.evaluate((sel) => {
@@ -52,6 +52,17 @@ let NEW = false;
 
 		// cancel if previously downloaded
 		if(DBHas(link)){
+			continue;
+		}
+
+		if(!title.match(/Warriors/)
+			|| !title.match(/Memphis/)
+			|| !title.match(/Philadelphia/)
+			|| !title.match(/Lakers/)
+			|| !title.match(/Jazz/)
+			){
+			addToDB(link, title);
+			console.log('Ignored: '+title);
 			continue;
 		}
 
