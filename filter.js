@@ -52,28 +52,8 @@ let NEW = false;
 
 		// cancel if previously downloaded
 		if(DBHas(link)){
-			continue;
+			
 		}
-
-		if(!title.match(/Warriors/)
-			&& !title.match(/Memphis/)
-			&& !title.match(/Philadelphia/)
-			&& !title.match(/Lakers/)
-			&& !title.match(/Jazz/)
-			){
-			addToDB(link, title);
-			console.log('Ignored: '+title);
-			continue;
-		}
-
-		// log valid title
-		console.log(title);
-
-		// download
-		download(link, title);
-
-		// new videos existed
-		NEW = true;
 
 	}
 
@@ -86,50 +66,6 @@ let NEW = false;
 function DBHas(link){
 
 	return db.get("downloaded").find({ link: link }).value()
-
-}
-
-function download(link, title){
-
-	// check for dir
-	if (!fs.existsSync(DL_DIR)) fs.mkdirSync(DL_DIR);
-
-	// download
-	let dl = youtubedl(link)
-
-	// write stream
-	let filename = sanitize(title) + ".mp4";
-	dl.pipe(fs.createWriteStream(`./${DL_DIR}/${filename}`));
-
-	// handle output
-	dl.on("info", (info) => {
-		console.log("Download started: " + filename);
-	})
-
-	dl.on("end", () => {
-		console.log("Download complete: " + filename);
-		addToDB(link, title);
-	});
-
-}
-
-function downloadOG(link, title){
-
-	// check for dir
-	if (!fs.existsSync(DL_DIR)) fs.mkdirSync(DL_DIR);
-
-	// download
-	let child = exec(`youtube-dl "${link}" -f best -o "${DL_DIR}/%(title)s.%(ext)s"`);
-
-	// handle output
-	child.on("error", (code, signal) => {
-		console.log("child process exited with " + `code ${code} and signal ${signal}`);
-	})
-
-	child.on("exit", (code, signal) => {
-		console.log("download complete");
-		addToDB(link, title);
-	})
 
 }
 
