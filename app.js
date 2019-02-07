@@ -29,6 +29,8 @@ let NEW = false;
 		return document.querySelectorAll(sel).length;
 	}, LENGTH_SELECTOR);
 
+	let toDL = [];
+
 	for(let i = 1; i <= listLength; i++){
 
 		let linkSelector = LINK_SELECTOR.replace("INDEX", i),
@@ -66,14 +68,24 @@ let NEW = false;
 		// 	continue;
 		// }
 
-		// log valid title
-		console.log(title);
+		toDL.push({link, title})
 
-		// download
-		download(link, title);
+		// log valid title
+		// console.log(title);
 
 		// new videos existed
 		NEW = true;
+
+	}
+
+	console.log(toDL);
+
+	for(let i = 0; i < toDL.length; i++){
+
+		const video = toDL[i];
+
+		// download
+		await download(video.link, video.title);
 
 	}
 
@@ -91,25 +103,38 @@ function DBHas(link){
 
 function download(link, title){
 
-	// check for dir
-	if (!fs.existsSync(DL_DIR)) fs.mkdirSync(DL_DIR);
+	return new Promise((done, err) => {
 
-	// download
-	let dl = youtubedl(link)
+		try{
 
-	// write stream
-	let filename = sanitize(title) + ".mp4";
-	dl.pipe(fs.createWriteStream(`./${DL_DIR}/${filename}`));
+			// check for dir
+			if (!fs.existsSync(DL_DIR)) fs.mkdirSync(DL_DIR);
 
-	// handle output
-	dl.on("info", (info) => {
-		console.log("Download started: " + filename);
+			// download
+			let dl = youtubedl(link)
+
+			// write stream
+			let filename = sanitize(title) + ".mp4";
+			dl.pipe(fs.createWriteStream(`./${DL_DIR}/${filename}`));
+
+			// handle output
+			dl.on("info", (info) => {
+				console.log("Download started: " + filename);
+			})
+
+			dl.on("end", () => {
+				console.log("Download complete: " + filename);
+				addToDB(link, title);
+				done();
+			});
+
+		} catch(e) {
+			console.log('error block triggered')
+			console.log(e)
+			err(e)
+		}
+
 	})
-
-	dl.on("end", () => {
-		console.log("Download complete: " + filename);
-		addToDB(link, title);
-	});
 
 }
 
