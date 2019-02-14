@@ -11,6 +11,17 @@ const adapter = new FileSync("db.json");
 const db = low(adapter);
 db.defaults({ downloaded: [] }).write();
 
+const arg = require('arg')({
+    '--manual': String,
+    '-m' : '--manual',
+});
+
+let search = false
+if(arg._[0] !== undefined){
+	search = arg._[0]
+	console.log('search for: ' + search)
+}
+
 const DL_DIR = "dl";
 let NEW = false;
 
@@ -44,8 +55,9 @@ let NEW = false;
 		}, linkSelector);
 
 		// cancel if not a target
-		if(!title.match(/Full Game Highlights/)
-			) continue;
+		if( !title.match( /Full Game Highlights/ ) ) continue
+
+		if( search && !title.match( search ) ) continue
 
 		// get link
 		link = await page.evaluate((sel) => {
