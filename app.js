@@ -30,7 +30,7 @@ let NEW = false;
 	const browser = await puppeteer.launch({headless: true});
 
 	const page = await browser.newPage();
-	await page.goto("https://www.youtube.com/channel/UCoh_z6QB0AGB1oxWufvbDUg/videos", {waitUntil: "networkidle2"});
+	await page.goto("https://www.youtube.com/user/FunnyVideoArmy/videos", {waitUntil: "networkidle2"});
 
 	const LINK_SELECTOR = "#items ytd-grid-video-renderer:nth-child(INDEX) h3 a";
 	const LENGTH_SELECTOR = "#items ytd-grid-video-renderer";
