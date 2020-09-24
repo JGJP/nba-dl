@@ -55,7 +55,7 @@ let NEW = false;
 		}, linkSelector);
 
 		// cancel if not a target
-		if( !title.match( /Full Game (\d )?Highlights/i ) ) continue
+		if( !title.match( /Full (Game (\d )?)?Highlights/i ) ) continue
 
 		if( search && !title.match( search ) ) continue
 
