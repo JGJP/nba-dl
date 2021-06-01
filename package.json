@@ -11,9 +11,10 @@
   "license": "ISC",
   "dependencies": {
     "arg": "^4.1.0",
+    "ffmpeg-static": "^4.3.0",
     "lowdb": "^1.0.0",
     "puppeteer": "^1.4.0",
     "sanitize-filename": "^1.6.1",
-    "youtube-dl": "^2.1.0"
+    "ytdl-core": "^4.8.2"
   }
 }

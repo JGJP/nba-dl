@@ -1,10 +1,11 @@
 const puppeteer = require("puppeteer");
 const { exec } = require("child_process");
 const fs = require("fs");
-const youtubedl = require("youtube-dl");
+const ytdl = require("ytdl-core");
 const sanitize = require("sanitize-filename");
 
 // DB
+const dl = require("./dl")
 const low = require("lowdb");
 const FileSync = require("lowdb/adapters/FileSync");
 const adapter = new FileSync("db.json");
@@ -30,7 +31,7 @@ let NEW = false;
 	const browser = await puppeteer.launch({headless: true});
 
 	const page = await browser.newPage();
-	await page.goto("https://www.youtube.com/c/THECCBN/videos", {waitUntil: "networkidle2", timeout: 0});
+	await page.goto("https://www.youtube.com/c/MLGHighlights1/videos", {waitUntil: "networkidle2", timeout: 0});
 
 	const LINK_SELECTOR = "#items ytd-grid-video-renderer:nth-child(INDEX) h3 a";
 	const LENGTH_SELECTOR = "#items ytd-grid-video-renderer";
@@ -90,7 +91,7 @@ let NEW = false;
 
 	}
 
-	console.log(toDL);
+	console.log(toDL.map(dl => dl.title));
 
 	for(let i = 0; i < toDL.length; i++){
 
@@ -115,30 +116,53 @@ function DBHas(link){
 
 function download(link, title){
 
-	return new Promise((done, err) => {
+	return new Promise(async (done, err) => {
 
 		try{
 
 			// check for dir
 			if (!fs.existsSync(DL_DIR)) fs.mkdirSync(DL_DIR);
 
-			// download
-			let dl = youtubedl(link)
-
-			// write stream
 			let filename = sanitize(title) + ".mp4";
-			dl.pipe(fs.createWriteStream(`./${DL_DIR}/${filename}`));
+			const outputfile = `./${DL_DIR}/${filename}`
+			console.log("Download started: " + filename);
+			await dl(link, outputfile)
+			console.log("Download complete: " + filename);
+			done()
 
-			// handle output
-			dl.on("info", (info) => {
-				console.log("Download started: " + filename);
-			})
+			// download
+			// let dl = ytdl(link, {
+			// 	quality: "highestvideo"
+			// })
 
-			dl.on("end", () => {
-				console.log("Download complete: " + filename);
-				addToDB(link, title);
-				done();
-			});
+			// // write stream
+			// let filename = sanitize(title) + ".mp4";
+			// dl.pipe(fs.createWriteStream(`./${DL_DIR}/${filename}`));
+
+			// // handle output
+			// dl.on("info", (info) => {
+			// 	console.log("Download started: " + filename);
+			// })
+
+			// let lastProg = Date.now()
+
+			// dl.on("progress", (_, downloaded, total) => {
+			// 	if (Date.now() - lastProg > 5000) {
+			// 		console.log(`progress: ${Math.round(downloaded/total*100)}%`);
+			// 		lastProg = Date.now()
+			// 	}
+			// 	if (downloaded === total) {
+			// 		console.log(`progress: 100%`);
+			// 		// done()
+			// 		// addToDB(link, title);
+			// 	}
+			// })
+
+			// dl.on("end", () => {
+			// 	console.log("Download complete: " + filename);
+			// 	addToDB(link, title);
+			// 	done();
+			// });
 
 		} catch(e) {
 			console.log('error block triggered')
